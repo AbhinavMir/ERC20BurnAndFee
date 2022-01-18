@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
+contract ERC20FAB is Context, IERC20, IERC20Metadata, Ownable {
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
     mapping(address=>bool) isBlacklisted;
@@ -73,10 +73,6 @@ contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
         return true;
     }
 
-    function mint(address to, uint256 amount) public onlyOwner {
-        _mint(to, amount);
-    }
-    
     function transferFrom(
         address sender,
         address recipient,
