@@ -6,9 +6,9 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
-import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract ERC20 is Context, IERC20, IERC20Metadata, AccessControl {
+contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
     mapping(address => uint256) private _balances;
     mapping(address => mapping(address => uint256)) private _allowances;
     mapping(address=>bool) isBlacklisted;
@@ -95,7 +95,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata, AccessControl {
         address recipient,
         uint256 amount
     ) internal virtual {
-        require(!isBlacklisted[recipient], "Recipient is backlisted");
+        require(!isBlacklisted[recipient], "Recipient is blacklisted");
         require(sender != address(0), "ERC20: transfer from the zero address");
         require(recipient != address(0), "ERC20: transfer to the zero address");
 
@@ -114,6 +114,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata, AccessControl {
     }
     
     function _mint(address account, uint256 amount) internal virtual {
+        require(!isBlacklisted[account], "Account is blacklisted");
         require(account != address(0), "ERC20: mint to the zero address");
 
         _beforeTokenTransfer(address(0), account, amount);
