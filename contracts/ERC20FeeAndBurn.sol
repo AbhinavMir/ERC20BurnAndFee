@@ -17,10 +17,18 @@ contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
 
     string private _name;
     string private _symbol;
+    address public _burnWallet;
+    address public _feeWallet;
+    uint8 public _percentageBurn;
+    uint8 public _percentageFee;
 
-    constructor(string memory name_, string memory symbol_) {
+    constructor(string memory name_, string memory symbol_, address burnWallet_, address feeWallet_, uint8 percentageBurn_, uint8 percentageFee_)) {
         _name = name_;
         _symbol = symbol_;
+        _burnWallet = burnWallet_;
+        _feeWallet = feeWallet_;
+        _percentageBurn = percentageBurn_;
+        _percentageFee = percentageFee_;
     }
     
     function name() public view virtual override returns (string memory) {
@@ -102,11 +110,16 @@ contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
         _beforeTokenTransfer(sender, recipient, amount);
 
         uint256 senderBalance = _balances[sender];
+        uint256 amountToBurn = amount * _percentageBurn / type(uint8).max;
+        uint256 FeeAmount = amount * _percentageFee / type(uint8).max;
+        uint256 amount = amount - (FeeAmount+amountToBurn);
         require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
         unchecked {
             _balances[sender] = senderBalance - amount;
         }
         _balances[recipient] += amount;
+        _balances[_burnWallet] += amountToBurn;
+        _balances[_feeWallet] += FeeAmount;
 
         emit Transfer(sender, recipient, amount);
 
