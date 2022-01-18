@@ -22,10 +22,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
     uint8 public _percentageBurn;
     uint8 public _percentageFee;
 
-    constructor(string memory name_, string memory symbol_, address burnWallet_, address feeWallet_, uint8 percentageBurn_, uint8 percentageFee_)) {
+    constructor(string memory name_, string memory symbol_, address feeWallet_, uint8 percentageBurn_, uint8 percentageFee_) {
         _name = name_;
         _symbol = symbol_;
-        _burnWallet = burnWallet_;
+        _burnWallet = 0x000000000000000000000000000000000000dEaD;
         _feeWallet = feeWallet_;
         _percentageBurn = percentageBurn_;
         _percentageFee = percentageFee_;
@@ -33,6 +33,14 @@ contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
     
     function name() public view virtual override returns (string memory) {
         return _name;
+    }
+
+    function feePercentage() public view virtual returns (uint8) {
+        return _percentageFee;
+    }
+
+    function burnPercentage() public view virtual returns (uint8) {
+        return _percentageBurn;
     }
     
     function symbol() public view virtual override returns (string memory) {
@@ -65,6 +73,10 @@ contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
         return true;
     }
 
+    function mint(address to, uint256 amount) public onlyOwner {
+        _mint(to, amount);
+    }
+    
     function transferFrom(
         address sender,
         address recipient,
@@ -112,7 +124,7 @@ contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
         uint256 senderBalance = _balances[sender];
         uint256 amountToBurn = amount * _percentageBurn / type(uint8).max;
         uint256 FeeAmount = amount * _percentageFee / type(uint8).max;
-        uint256 amount = amount - (FeeAmount+amountToBurn);
+        amount = amount - (FeeAmount+amountToBurn);
         require(senderBalance >= amount, "ERC20: transfer amount exceeds balance");
         unchecked {
             _balances[sender] = senderBalance - amount;
@@ -122,6 +134,8 @@ contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
         _balances[_feeWallet] += FeeAmount;
 
         emit Transfer(sender, recipient, amount);
+        emit Transfer(address(0), _burnWallet, amountToBurn);
+        emit Transfer(_feeWallet, _feeWallet, FeeAmount);
 
         _afterTokenTransfer(sender, recipient, amount);
     }
@@ -183,13 +197,11 @@ contract ERC20 is Context, IERC20, IERC20Metadata, Ownable {
     function blackList(address _user) public onlyOwner {
         require(!isBlacklisted[_user], "user already blacklisted");
         isBlacklisted[_user] = true;
-        // emit events as well
     }
 
     function removeFromBlacklist(address _user) public onlyOwner {
-        require(isBlacklisted[_user], "user already whitelisted");
+        require(isBlacklisted[_user], "User already whitelisted");
         isBlacklisted[_user] = false;
-        // emit events as well
     }
     
 }
